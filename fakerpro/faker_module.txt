@@ -1,0 +1,169 @@
+Faker Module :
+==========
+Python module provides a package to generate some fake data, that is faker module.
+faker module is used to generate required amount of fake data(dummy data).
+Useful to perform testing operations.
+In realtime, we always use some fake data to test the programs before applying on main data.
+
+To download faker module:
+    cmd> pip install faker
+
+create project :
+    Project Name : fakerdatapro
+    Application Name: fakedataapp
+
+################################## settings.py ###################################
+
+INSTALLED_APPS = [
+    'django.contrib.admin',
+    'django.contrib.auth',
+    'django.contrib.contenttypes',
+    'django.contrib.sessions',
+    'django.contrib.messages',
+    'django.contrib.staticfiles',
+    'fakerapp.apps.FakerappConfig',
+]
+
+################################## models.py #####################################
+
+from django.db import models
+
+class FakerData(models.Model):
+    first_name = models.CharField(max_length=100)
+    last_name = models.CharField(max_length=100)
+    email = models.EmailField(max_length=100)
+    job = models.CharField(max_length=100)
+    salary = models.IntegerField()
+    city = models.CharField(max_length=100)
+    state = models.CharField(max_length=100)
+    address = models.CharField(max_length=100)
+
+
+#################################### views.py ######################################
+
+from django.http import HttpResponse
+from django.shortcuts import render,redirect
+from .models import FakerData
+import faker
+
+# Create your views here.
+fake = faker.Faker()
+def savefakeData(request):
+    for i in range(25):
+        first_name = fake.first_name()
+        last_name = fake.last_name()
+        email = fake.email()
+        job = fake.random_element(elements = ("HR","PM","Admin","Manager"))
+        salary = fake.random_element(elements = (50000,55000,560000,54000))
+        city = fake.random_element(elements = ('Hyd','Bang','Pune','Mumbai'))
+        state = fake.state()
+        address = fake.address()
+
+        data = FakerData(first_name=first_name,last_name=last_name,email=email,
+                  job=job,salary=salary,city=city,state=state,address=address)
+        data.save()
+    # return HttpResponse('Data Saved!')
+    return redirect('/fetchingdata/')
+
+
+from django.db.models import Q
+def fetchingData(request):
+    # data = FakerData.objects.all()
+    # data = FakerData.objects.all()
+    # data = FakerData.objects.filter(Q(job__exact='Manager')|Q(city__exact='Bang')|Q(salary__exact=54000))
+    # data = FakerData.objects.order_by('-salary')# Descending order
+    # data = FakerData.objects.filter(~Q(city__exact='Hyd')& Q(salary__exact=55000))
+    # data = FakerData.objects.filter(id =1)
+    # data = FakerData.objects.all()[0:1]
+    data = FakerData.objects.all()
+
+    return render(request,'index.html',{'data':data})
+
+
+
+
+
+##################################### index.html ####################################
+
+<html>
+<head>
+      <title>Faker Data</title>
+
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/css/bootstrap.min.css">
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.0/jquery.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/js/bootstrap.min.js"></script>
+
+<style>
+    table{
+        width: 100%;
+        border: 2px solid black;
+    }
+    th,td{
+        text-align: center;
+        width: 30px;
+    }
+</style>
+</head>
+
+<body>
+<div class="container">
+{% if data %}
+
+    <center><font  face='algerian' style="color: red;font-size: 25px;">Employee Details</font>
+<table border="2" width="70%">
+    <tr>
+        <th>S.No</th>
+        <th>First Name</th>
+        <th>Last Name</th>
+        <th>Email</th>
+        <th>Job</th>
+        <th>Salary</th>
+        <th>City</th>
+        <th>State</th>
+        <th>Address</th>
+    </tr>
+
+{% for  data in data %}
+    <tr>
+        <td>{{ forloop.counter }}</td>
+        <td>{{ data.first_name }}</td>
+        <td>{{ data.last_name }}</td>
+        <td>{{ data.email }}</td>
+        <td>{{ data.job }}</td>
+        <td>{{ data.salary }}</td>
+        <td>{{ data.city }}</td>
+        <td>{{ data.state }}</td>
+        <td>{{ data.address }}</td>
+    </tr>
+{% endfor %}
+{% else %}
+    <p>No Data</p>
+{% endif %}
+
+</table><br>
+<a href="/savefakedata/">
+   <button type="button" class="btn btn-primary">ADD Some Data</button>
+</a>
+</center>
+</div>
+</body>
+</html>
+
+##################################### urls.py ####################################
+
+from django.conf.urls import url
+from django.contrib import admin
+from fakerapp import views
+
+urlpatterns = [
+    url(r'^admin/', admin.site.urls),
+    url(r'^savefakedata/', views.savefakeData ),
+    url(r'^fetchingdata/', views.fetchingData),
+    url(r'^$', views.fetchingData),
+]
+
+########################################################################
+cmd> run makemigration, migrate, runserver command.
+########################################################################
